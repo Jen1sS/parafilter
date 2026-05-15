@@ -9,4 +9,4 @@ padre tramite una pipe
 4. Raccolta: Il padre legge da tutte le pipe e stampa su stdout i
 risultati ricevuti dai figli
 
-No
+Meh
