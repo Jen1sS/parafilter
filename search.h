@@ -1,0 +1,1 @@
+short search(int data_size, char* data, int keyword_size, char* keyword);

@@ -1,0 +1,1 @@
+void send(char* msg,int size,int fd);
