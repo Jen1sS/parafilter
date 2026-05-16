@@ -117,8 +117,6 @@ int main(int argc, char **argv)
 
             if (parLen<sizeDef-1 || partial[parLen-1]==10) {
                 if (search(linelen,line,keyword_size,keyword)) {
-                    
-                    
                     char* tmp[3] = {childsource,"]:",line};
                     char* out = "[";
 
