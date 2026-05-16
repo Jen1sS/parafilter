@@ -121,8 +121,8 @@ int main(int argc, char **argv)
             resize_and_strcat(&line, partial);
                 
             if (ind!=-1 && ind!=sizeDef) {
-
-                //TODO: Optimize strlen
+                     
+                //TODO: Optimize
                 if (search(strlen(line),line,keyword_size,keyword)) {
                     
                     char* tmp[3] = {childsource,"]:",line};
@@ -131,7 +131,8 @@ int main(int argc, char **argv)
                     resize_and_strcatM(&out,tmp,3);
                     send(out,sizeDef,fd[pipeID]);
                 }
-                
+
+                line = malloc(sizeof(char*));
                 line = "";
             }
 
