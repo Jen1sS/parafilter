@@ -111,6 +111,7 @@ int main(int argc, char **argv)
         {
             int ind=-1;
 
+            //TODO: Optimize
             for (int i=0; i<sizeDef; i++) 
                 if (partial[i]==0 || partial[i]==10) {
                     ind=i+1;
@@ -120,7 +121,8 @@ int main(int argc, char **argv)
             resize_and_strcat(&line, partial);
                 
             if (ind!=-1 && ind!=sizeDef) {
-                                        
+
+                //TODO: Optimize strlen
                 if (search(strlen(line),line,keyword_size,keyword)) {
                     
                     char* tmp[3] = {childsource,"]:",line};
@@ -129,8 +131,7 @@ int main(int argc, char **argv)
                     resize_and_strcatM(&out,tmp,3);
                     send(out,sizeDef,fd[pipeID]);
                 }
-
-                line = malloc(sizeof(char*));
+                
                 line = "";
             }
 
