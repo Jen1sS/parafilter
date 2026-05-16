@@ -1,0 +1,7 @@
+files.o
+main.o
+parafilter
+pipes.o
+strings.o
+search.o
+error.log

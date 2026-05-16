@@ -21,7 +21,7 @@ int main(int argc, char **argv)
 {
 
     //both related
-    unsigned short sizeDef = 100; //default size for reading from file and writing in pipe
+    unsigned short sizeDef = 10; //default size for reading from file and writing in pipe
     int fid = getpid(); //father id
     int id;
 
@@ -105,26 +105,18 @@ int main(int argc, char **argv)
         }
 
         line = "";
+        int linelen = strlen(line);
 
         // Read the data from the file using fgets() method
         while (fgets(partial, sizeDef, fptr) != NULL)
         {
-            int ind=-1;
-
-            //TODO: Optimize
-            for (int i=0; i<sizeDef; i++) 
-                if (partial[i]==0 || partial[i]==10) {
-                    ind=i+1;
-                    i=sizeDef;
-                }
-
+            int parLen = strlen(partial);
+            
             resize_and_strcat(&line, partial);
-                
-            if (ind!=-1 && ind!=sizeDef) {
-                     
-                //TODO: Optimize
-                if (search(strlen(line),line,keyword_size,keyword)) {
-                    
+            linelen+=parLen;
+
+            if (parLen<sizeDef-1 || partial[parLen-1]==10) {
+                if (search(linelen,line,keyword_size,keyword)) {
                     char* tmp[3] = {childsource,"]:",line};
                     char* out = "[";
 
@@ -132,8 +124,8 @@ int main(int argc, char **argv)
                     send(out,sizeDef,fd[pipeID]);
                 }
 
-                line = malloc(sizeof(char*));
                 line = "";
+                linelen = strlen(line);
             }
 
         }
