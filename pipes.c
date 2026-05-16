@@ -9,11 +9,8 @@ void send(char* msg,int size, int fd){
     int toSend = strlen(msg);
     int sent = 0;
 
-    while (toSend>=0){        
-        write(fd,&msg[sent],size);
-        toSend-=size;
-        sent+=size;
-    }
-
-    //write(fd,"\n",size);
+    msg[toSend-1]='\n';
+    
+    while (sent<toSend) 
+        sent += write(fd,&msg[sent],size>toSend?size:toSend);
 }

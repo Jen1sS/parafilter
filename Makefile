@@ -1,7 +1,7 @@
 CC = gcc
 CFLAGS = -Wall -Wextra -std=c11 -g
 TARGET = parafilter
-OBJS = main.o search.o strings.o pipes.o
+OBJS = main.o search.o strings.o pipes.o files.o
 
 all: $(TARGET)
 
@@ -19,6 +19,9 @@ strings.o: strings.c strings.h
 
 pipes.o: pipes.c pipes.h
 	$(CC) $(CFLAGS) -c pipes.c -o pipes.o
+
+files.o: files.c files.h
+	$(CC) $(CFLAGS) -c files.c -o files.o
 
 clean:
 	rm -f $(OBJS) $(TARGET)
