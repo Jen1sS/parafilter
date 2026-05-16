@@ -5,27 +5,30 @@
 #include <unistd.h>
 #include <sys/wait.h>
 #include <fcntl.h>
+#include <errno.h>
 
-//test 1: parafilter -e errori.txt "root" /etc/shadow /etc/passwd
-//test 2: parafilter "password" /var/log/syslog /var/log/auth.log
 
-short search(int data_size, char* data, int keyword_size, char* keyword);
-void resize_and_strcat(char** line, char* partial);
-void resize_and_strcatM(char** line, char** partial, int partial_size);
-void send(char* msg,int size,int fd);
-void openFile(FILE** file, char* source,char* mode);
+#include "files.h"
+#include "pipes.h"
+#include "search.h"
+#include "strings.h"
+
+//test 1: parafilter -e error.log cipher ./test.txt ./test2.txt ./test3.txt ./gurtyo.txt ./gia/ciao.txt   
+//test 2: parafilter cipher ./test.txt ./test2.txt ./test3.txt ./gurtyo.txt ./gia/ciao.txt
+//test 3: parafilter
 
 int main(int argc, char **argv)
 {
 
     //both related
-    unsigned short sizeDef = 50; //default size for reading from file and writing in pipe
+    unsigned short sizeDef = 100; //default size for reading from file and writing in pipe
     int fid = getpid(); //father id
+    int id;
+
 
     //father related
     unsigned short errors = 0; //error reporting
-    char* inbuf = malloc(sizeDef + 1);
-    int nbytes;
+    char* recieved = "";
 
     //children related
     char* keyword; //keyword
@@ -33,9 +36,9 @@ int main(int argc, char **argv)
     char* childsource; //file source for child
     int start; //variable start for arguments since there can be -e file_name
     int children_size; //n of children needed
-    int fd[2]; //pipe management
     char* line = "";
     char partial[sizeDef];
+    int pipeID;
 
     //args check
     if (argc<3) {
@@ -48,45 +51,58 @@ int main(int argc, char **argv)
         errors++;
         keyword = argv[3];
 
-        //dup2 to redirect stderr
-        int errdesc = open(argv[2],O_WRONLY | O_APPEND | O_CREAT, 0600);
-
-        if (errdesc < 0) {
-            perror("Error logs error");
+        if (moveSTD(argv[2],2)!=0) {
+            perror("Error during dup2 call:");
             return 1;
         }
-        dup2(errdesc,2);
-
 
     } else keyword = argv[1];
     
     //fetch keyword size
     keyword_size = strlen(keyword);
 
-    //child creation and path allocation
-    start = 1-2*errors; 
+    //#region child creation and path allocation
+    start = 2+2*errors; 
     children_size = argc-start;
+
     pid_t children[children_size]; 
-    pipe(fd);
+    int fd[children_size][2]; //pipe management
 
-    for (int i=2+2*errors; i<argc; i++) {
-        children[i-start]=fork();
+    for (int i=0; i<children_size; i++) {
+        if (pipe(fd[i])==-1) {
+            perror("Error creating pipe");
+            exit(1);
+        }
 
-        if(children[i-start]<0) {
+        children[i]=fork();
+
+        id = getpid()-fid;
+
+        if(children[i]<0) {
             perror("fork fail");
             exit(1);
-        } else if ( getpid() != fid ) {
-            close(fd[0]);
-            childsource = argv[i];
+        } else if (id !=0) {
+            pipeID = i;
+            close(fd[i][0]);
+            childsource = argv[i+start];
             i=argc;
-        }
+        } else if (id==0) close(fd[i][1]);
     }
 
+
     //children code
-    if (getpid()!=fid) {  
+    if (id !=0) {  
 
         FILE* fptr;
-        openFile(&fptr,childsource,"r");
+        if (openFile(&fptr,childsource,"r")!=0) {
+
+            char* err = "[";
+            char* tmp[2] = {childsource,"] Error"};
+
+            resize_and_strcatM(&err,tmp,2);
+            perror(err);
+            exit(1);
+        }
 
         line = "";
 
@@ -111,12 +127,7 @@ int main(int argc, char **argv)
                     char* out = "[";
 
                     resize_and_strcatM(&out,tmp,3);
-
-                    //printf("Original (%d): %s\n",strlen(out),out);
-                    send(out,sizeDef,fd[1]);
-
-                    fflush(stdout);
-
+                    send(out,sizeDef,fd[pipeID]);
                 }
 
                 line = malloc(sizeof(char*));
@@ -126,17 +137,25 @@ int main(int argc, char **argv)
         }
         
         fclose(fptr); // Closing the file 
-        return 0;
+        exit(0);
     }
     
     //father code
-    close(fd[1]);
+    int end = 0;
+    int status;
 
-    while ((nbytes = read(fd[0], inbuf, sizeDef)) > 0) {
-        inbuf[nbytes] = '\0';
-        fprintf(stdout,"%s",inbuf);
+    while (end<children_size) {
+        for (int i = 0; i < children_size; i++)
+        {
+            //waitpid(children[i],&status,WNOHANG);
+            if (waitpid(children[i],&status,WNOHANG)!=0) end++;
+            else end==0;
+
+            readd(&recieved,sizeDef,fd[i]);
+            fprintf(stdout,"%s",recieved);
+            recieved="";
+        }
     }
-
     return 0;
 }
 

@@ -5,4 +5,6 @@
 #include <unistd.h>
 #include <sys/wait.h>
 
-void openFile(FILE** file, char* source,char* mode);
+int openFile(FILE** file, char* source,char* mode);
+
+int moveSTD(char* source,int type);

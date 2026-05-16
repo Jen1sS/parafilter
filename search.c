@@ -1,3 +1,5 @@
+
+//Search for a keyword in a string
 short search(int data_size, char* data, int keyword_size, char* keyword){
     int match = 0;      
 

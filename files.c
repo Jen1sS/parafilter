@@ -4,19 +4,31 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <sys/wait.h>
+#include <fcntl.h>
+#include <errno.h>
 
-void resize_and_strcatM(char** line, char** partial, int partial_size);
+#include "strings.h"
 
 
-void openFile(FILE** file, char* source,char* mode){
+int openFile(FILE** file, char* source,char* mode){
     *file = fopen(source, mode); // Opening the file in read mode
 
     if (*file == NULL) { //is file opened
-        char* err = "[";
-        char* tmp[2] = {source,"] Error"};
-
-        resize_and_strcatM(&err,tmp,2);
-
-        perror(err);
+        return errno;
     }
+    return 0;
+}
+
+
+//moves stderr, stdout, stdin to a specified file
+int moveSTD(char* newstd,int type){
+    //dup2 to redirect stderr
+    int errdesc = open(newstd,O_WRONLY | O_APPEND | O_CREAT, 0600);
+
+    if (errdesc < 0) {
+        return errno;
+    }
+    
+    dup2(errdesc,type);
+    return 0;
 }
